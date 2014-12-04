@@ -1,0 +1,187 @@
+\documentclass{beamer}
+
+\usepackage[english]{babel}
+\usepackage{amsmath,amsthm,amsfonts}
+\usepackage{xkeyval}
+\usepackage{graphics}
+\usepackage{url}
+\usepackage[lined,boxed,linesnumbered]{algorithm2e}
+\usepackage{CJKutf8} %支持中文
+
+\mode<presentation>
+{
+  %\usetheme{}
+  %\usecolortheme{beaver}
+  % 可供选择的主题参见 beameruserguide.pdf, 第 134 页起
+  % 无导航条的主题: Bergen, Boadilla, Madrid, Pittsburgh, Rochester;
+  % 有树形导航条的主题: Antibes, JuanLesPins, Montpellier;
+  % 有目录竖条的主题: Berkeley, PaloAlto, Goettingen, Marburg, Hannover;
+  % 有圆点导航条的主题: Berlin, Dresden, Darmstadt, Frankfurt, Singapore, Szeged;
+  % 有节与小节导航条的主题: Copenhagen, Luebeck, Malmos, Warsaw
+  %\setbeamercovered{transparent}
+  % 如果取消上一行的注解 %, 就会使得被覆盖部分变得透明(依稀可见)
+}
+\definecolor{kured}{RGB}{123,104,238}
+\definecolor{kuredlys}{RGB}{106,90,205}
+\definecolor{kuredlyslys}{RGB}{72,61,139}
+\definecolor{kuredlyslyslys}{RGB}{75,0,130}
+\setbeamercovered{transparent} %设置半透明化尚未出现的内容
+\mode<presentation>
+{
+  \usetheme{Madrid}
+  \usecolortheme[named=kured]{structure}
+  \useinnertheme{circles}
+  \usefonttheme[onlymath]{serif}
+  \setbeamercovered{transparent}
+  \setbeamertemplate{blocks}[rounded][shadow=true]
+}
+
+
+\logo{\includegraphics[scale=0.07]{images/HUSTLogo}}%Logo of the presentation
+\title{Replicated Softmax:an Undirected Topic Model}
+\subtitle{Ruslan Salakhutdinov,Geoffrey Hinton-NIPS2009}
+\author{Yunfei Wang}
+\institute{Department of Computer Science \& Technology \\ Huazhong University of Science \& Technology}
+\date{\today}
+
+\begin{document}
+
+\begin{CJK*}{UTF8}{gbsn} %中文支持
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}\frametitle{Table of contents}
+\tableofcontents
+\end{frame}
+
+\section{Introduction}
+\begin{frame}\frametitle{Introduction}
+\begin{block}{Advantages}
+\begin{itemize}
+\item Capture the distributed representations provided by a whole set of active features.
+\item Deal with documents of different lengths.
+\end{itemize}
+\end{block}
+\end{frame}
+
+\section{Replicated Softmax:A Generative Model of Word Counts}
+\begin{frame}[allowframebreaks]\frametitle{Replicated Softmax}
+\begin{block}{Notation}
+$K$ is dictionary size,$D$ is document size;\\
+observed matrix $V\in\{0,1\}^{K\times D}$,hidden topic features $h\in\{0,1\}^F$;\\
+$v_i^k=1$ if visible unit $i$ takes on $k^{th}$ value.
+\end{block}
+Energy of state $\{V,h\}$:
+\begin{equation}
+E(V,h)=-\sum_{i=1}^D\sum_{j=1}^F\sum_{k=1}^KW_{ij}^kv_i^kh_j-\sum_{i=1}^D\sum_{k=1}^Kv_i^kb_i^k-\sum_{j=1}^Fh_ja_j
+\end{equation}
+where $\theta=\{W,a,b\}$ are the model parameters.
+
+\newpage
+Probability of visible binary matrix $V$:
+\begin{equation}
+P(V)=\frac{1}{Z}\sum_h\exp(-E(V,h))
+\end{equation}
+where $Z=\sum_V\sum_h\exp(-E(V,h))$ is normalizing constant.\\
+Conditional distributions are given by softmax and logistic functions:
+\begin{equation}
+p(v_i^k=1|h)=\frac{\exp(b_i^k+\sum_{j=1}^Fh_jW_{ij}^k)}{\sum{q=1}^K\exp(b_i^q+\sum_{j=1}^Fh_jW_{ij}^q)}
+\end{equation}
+\begin{equation}
+p(h_j=1|V)=\sigma(a_j+\sum_{i=1}^D\sum{k=1}^Kv_i^kW_{ij}^k)
+\end{equation}
+where $\sigma(x)=1/(1+\exp(-x))$ is logistic function.
+
+Ignoring order of words,creating a separate RBM with $D$ softmax units with same set of weights and biases for each document:
+\begin{equation}
+E(V,h)=-\sum_{j=1}^F\sum_{k=1}^KW_j^kh_j\hat{v}^k-\sum_{kl=1}^K\hat{v}^kb^k-D\sum_{j=1}^Fh_ja_j
+\end{equation}
+where $\hat{v}^k=\sum_{i=1}^Dv_i^k$ denotes the count for $k^{th}$ word.\\
+\vspace{10pt}
+\textcolor{blue}{Bias terms of hidden units are scaled up by length of document},which makes hidden topic units behave sensibly when dealing with document with different sizes.
+
+\newpage
+Give a collection of $N$ documents $\{V_n\}_{n=1}^N$,the derivation of log-likelihood with respect to $W$ takes the form:
+\begin{equation}
+\frac{1}{N}\sum_{n=1}^N\frac{\partial\log P(V_n)}{\partial W_j^k}=E_{P_{data}}[\hat{v}^kh_j]-\underbrace{E_{P_{model}}[\hat{v}^kh_j]}_{\textcolor{red}{untractable}}
+\end{equation}
+where $E_{P_{data}}[\cdot]$ and $E_{P_{model}}[\cdot]$denotes expectation with respect to data and model distribution respectively.
+\begin{equation}
+P_{data}(h,V)=p(h|V)P_{data}(V)
+\end{equation}
+where $P_{data}(V)=\sum_n\sigma(V-V_n)/N$ representing the empirical distribution.
+\end{frame}
+
+\section{Evaluating Replicated Softmax as a Generative Model}
+\begin{frame}\frametitle{What's the challenge here?}
+Partition function:
+\begin{equation}
+Z=\sum_V\sum_h\exp(-E(V,h))
+\end{equation}
+Due to the presence of partition function,model selection,complexity control and exact maximum likelihood learning in RBM's are intractable.\\
+\vspace{10pt}
+\textcolor{cyan}{Partition function can be eliminated through division operation when under same probability distributions.}\\
+\vspace{10pt}
+\textcolor{red}{But what can we do we encounter RBM's with different distributions?}\\
+\vspace{10pt}
+\textcolor{blue}{Apparently,documents with different size(state of $V$ changes) belong to different distributions.}
+\end{frame}
+
+\begin{frame}\frametitle{Simple Importance Sampling}
+Two distributions $p_A(x)=p_A^\ast(x)/Z_Z$,$p_B(x)=p_B^\ast(x)/Z_B$,where $p_A(x)$ is distribution with known $Z_A$ and $p_B(x)$ represents target distribution.\\
+\textcolor{cyan}{Using a simple importance sampling(IS) to estimate ratio of normalizing constants:}
+\begin{equation}
+\frac{Z_B(x)}{Z_A(x)}=\frac{\int p_B^\ast(v)d_v}{Z_A}=\int\frac{p_B^\ast(v)}{p_A^\ast(v)}p_A(v)d_v=E_{P_A}\left[\frac{p_B^\ast(v)}{p_A^\ast(v)}\right]
+\end{equation}
+\textcolor{magenta}{Drawing independent samples from $p_A$,the ration can be obtained by a simple Monte Carlo approximation:}
+\begin{equation}
+\frac{Z_B(x)}{Z_A(x)}\approx\frac{1}{M}\sum_{i=1}^M\frac{p_B^\ast(v^i)}{p_A^\ast(v^i)}=\frac{1}{M}\sum_{i=1}^M\omega^i=\hat{r}_{IS}
+\end{equation}
+where $v^i\sim p_A$.\textcolor{red}{Estimator $\hat{r}_{IS}$ will have large variance,unless $p_A$ is near-perfect approximation to $p_B$.}
+\end{frame}
+
+\begin{frame}[allowframebreaks]\frametitle{Annealed Importance Sampling(AIS)}
+Define a sequence of intermediate probability distributions:$\{p_0,\cdots,p_K\}$ with $p_0=p_A$ and $p_K=p_B$.\\
+For each $k=0,\cdots,K-1$,we must be able to draw a sample $v'$ from $v$ using a Markov chain transition operation $T_k(v';v)$ that leaves $p_k(v)$ invariant:
+\begin{equation}
+\int T_k(v';v)p_k(v)d_v=p_k(v')
+\end{equation}
+One general way to define this sequence is to set:
+\begin{equation}
+p_k(x)\propto p_A^\ast(x)^{1-\beta_k}p_B^\ast(x)^{\beta_k}
+\end{equation}
+with $0=\beta_0<\beta_1<\dots<\beta_K=1$ chosen by user.
+
+\begin{algorithm}[H]
+\KwIn{$p_A,p_B$;}
+\KwOut{$\omega_{AIS}$;}
+\emph{Initialize $0=\beta_0<\beta_1<\dots<\beta_K=1$}\;
+\tcp*[h]{Generate $v_1,v_2,\cdots,v_K$ as follows}\;
+Sample $v_1$ from $p_0=p_A$\;
+\For{$k= 1$ \KwTo $K-1$}
+{
+	Sample $v_{k+1}$ given $v_k$ using $T_k(V_{k+1};v_k)$\;
+}
+\Return $\omega_{AIS}=\frac{p_1^\ast(v_1)}{p_{0}^\ast(v_1)}\frac{p_2^\ast(v_2)}{p_{1}^\ast(v_2)}\cdots\frac{p_{K-1}^\ast(v_{K-1})}{p_{K-2}^\ast(v_{K-1})}\frac{p_K^\ast(v_K)}{p_{K-1}^\ast(v_K)}=\prod_{k=1}^K\frac{p_k^\ast(v_k)}{p_{k-1}^\ast(v_k)}$\;	
+\caption{Annealed Importance Sampling(AIS) run}
+\end{algorithm}
+There's no need to compute normalizing constants of any intermediate distributions.After performing $M$ runs of AIS,the ratio of normalizing constants:
+\begin{equation}
+\frac{Z_B}{Z_A}\approx\frac{1}{M}\sum_{i=1}^M\omega_{AIS}^i=\hat{r}_{AIS}
+\end{equation}
+\end{frame}
+
+\begin{frame}\frametitle{Applying AIS into RBM's}
+For Replicated Softmax model with $D$ words,joint distribution over $\{V,h\}$ is defined as:
+\begin{equation}
+p(V,h)=\frac{1}{Z}\exp(\sum_{j=1}^F\sum_{k=1}^KW_j^kh_j\hat{v}^k)
+\end{equation}
+The sequence of intermediate distributions can be defined as follows:
+\begin{equation}
+p_k(V)=\frac{1}{Z_k}p^\ast(V)=\frac{1}{Z_k}\sum_hp_k^\ast(V,h)=\frac{1}{Z_k}\prod_{j=1}^F(1+\exp(\beta_k\sum_{k=1}^KW_j^k\hat{v}^k))
+\end{equation}
+\end{frame}
+\end{CJK*}
+\end{document}

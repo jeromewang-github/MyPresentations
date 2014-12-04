@@ -1,0 +1,80 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=ks_c_5601-1987">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title> Efficient sparse coding algorithms</title>
+</head>
+
+<body>
+
+<table border="0" width="100%">
+  <tr>
+    <td><p><b> <font face="Times New Roman" size="6"> Efficient sparse coding algorithms </font></b></td>
+  </tr>
+    <tr><td><p><font face="Times New Roman" size="5"> Honglak Lee, Alexis Battle, Rajat Raina, and Andrew Y. Ng.</font></p></td>
+  </tr>
+</table>
+
+<p>&nbsp;</p>
+
+<table border="0" width="100%">
+  <tr>
+    <td><p><b><font face="Times New Roman" size="5">Description</font></b></td>
+  </tr>
+  <tr>
+    <td><p><font face="Times New Roman" size="4">
+		This page contains a matlab code implementing the algorithms described in the NIPS paper "Efficient sparse coding algorithms".<br> <br>
+		In the paper, we propose fast algorithms for solving two <b>general-purpose convex problems</b>:<br>
+		(1) <b>L1-regularized Least Squares</b> problem solver using <b>the feature-sign search algorithm</b> and<br>
+		(2) <b>L2-constrained Least Squares</b> problem solver using Lagrange dual.<br><br>
+
+		Especially, our feature-sign search algorithm (L1-regularized Least Squares solver) is very fast, and can be used for many other machine learning problems; when tested for the benchmark data, the feature-sign search algorithm outperforms many other existing algorithms such as LARS, basis pursuit, and grafting. 
+		For more details, see our <a href="../nips06-sparsecoding.pdf">NIPS'06 paper</a>.<br>
+		<br>
+
+		We also apply this efficient sparse coding algorithm to a new machine learning framework called <i>"self-taught learning"</i>, where we are given a small amount of labeled data for a supervised learning task, and lots of additional unlabeled data that does not share the labels of the supervised problem and does not arise from the same distribution. For more details, see our <a href="../icml07-selftaughtlearning.pdf">ICML'07 paper</a>.<br>
+
+	</font></td>
+  </tr>
+</table>
+
+<p>&nbsp;</p>
+
+<table border="0" width="100%">
+  <tr>
+    <td><p><b><font face="Times New Roman" size="5"> Download</font></b></td>
+  </tr>
+  <tr>
+    <td><p><font face="Times New Roman" size="4"> 
+	<a href="fast_sc.tgz">Matlab code </a> </font></td>
+  </tr>
+  <tr>
+    <td><p><font face="Times New Roman" size="4"> 
+	<a href="../nips06-sparsecoding.pdf"> Paper </a> </font></td>
+  </tr>
+</table>
+
+<p>&nbsp;</p>
+
+<table border="0" width="100%">
+  <tr>
+    <td><p><b><font face="Times New Roman" size="5">Feedback</font></b></td>
+  </tr>
+  <tr>
+    <td><p><font face="Times New Roman" size="4">
+		Please <a href="mailto:hllee@cs.stanford.edu">email</a> me if you have any question.<br>
+	</font></td>
+  </tr>
+  <tr>
+    <td><p><font face="Times New Roman" size="4">
+		For more information, visit my <a href="http://ai.stanford.edu/~hllee">webpage</a>.<br>
+	</font></td>
+  </tr>
+</table>
+
+</body>
+
+</html>

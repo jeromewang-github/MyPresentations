@@ -1,0 +1,159 @@
+\documentclass{beamer}
+
+\usepackage[english]{babel}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{xkeyval}
+\usepackage{graphics}
+\usepackage{url}
+\usepackage{cases}
+\usepackage[lined,boxed,linesnumbered]{algorithm2e}
+
+\definecolor{mycolor}{RGB}{220,20,29}
+\definecolor{mycolorlys}{RGB}{214,45,56}
+\definecolor{mycolorlyslys}{RGB}{200,57,58}
+\definecolor{mycolorlyslyslys}{RGB}{190,96,94}
+%\mode<presentation>
+%{
+  %\usetheme{}
+  %\usecolortheme{beaver}
+  % 可供选择的主题参见 beameruserguide.pdf, 第 134 页起
+  % 无导航条的主题: Bergen, Boadilla, Madrid, Pittsburgh, Rochester;
+  % 有树形导航条的主题: Antibes, JuanLesPins, Montpellier;
+  % 有目录竖条的主题: Berkeley, PaloAlto, Goettingen, Marburg, Hannover;
+  % 有圆点导航条的主题: Berlin, Dresden, Darmstadt, Frankfurt, Singapore, Szeged;
+  % 有节与小节导航条的主题: Copenhagen, Luebeck, Malmos, Warsaw
+  %\setbeamercovered{transparent}
+  % 如果取消上一行的注解 %, 就会使得被覆盖部分变得透明(依稀可见)
+%}
+\mode<presentation>
+{
+    \usetheme{Madrid}
+    \usecolortheme[named=mycolor]{structure}
+    \useinnertheme{circles}
+    \usefonttheme[onlymath]{serif}
+    \setbeamertemplate{blocks}[rounded][shadow=true]
+}
+
+%\logo{\includegraphics[scale=0.08]{images/HUSTLogo}}
+\title{Semi-Nonnegative Matrix Factorization for Motion Segmentation with Missing Data}
+\subtitle{Quanyi Mo \& Bruce A. Draper-ECCV 2012}
+\author{Yunfei Wang}
+\institute{Department of Computer Science \& Technology\\Huazhong University of Science \& Technology}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}
+\tableofcontents
+\end{frame}
+
+%==============================================================
+\section{Introduction}
+\begin{frame}\frametitle{Motion Segmentation}
+\begin{block}{Importance}
+Moving objects segmentation is a precondition for object,action or event recognition.
+\end{block}
+\begin{block}{Complication}
+Multiple independent motions,transient occlusions among objects,changes in illumination,flexible and/or articulated objects,camera motions.
+\end{block}
+\begin{block}{Challenge}
+Identifying parts of scenes moving consistently with each other over time.
+\end{block}
+\end{frame}
+
+\begin{frame}\frametitle{Problem Definition}
+\begin{itemize}
+\item The input to point-based video segmentation is a dense set of points extracted from frames in a video and tracked over time.
+\item The goal is to group together point tracks corresponding to independently moving objects.
+\item Grouping Error:two or more points from different objects are grouped together.
+\item Over-segmentation Error:a single object is split into multiple groups.
+\end{itemize}
+\end{frame}
+
+
+\section{Key methods}
+\subsection{SNMF for motion segmentation problem}
+\begin{frame}[allowframebreaks]\frametitle{SNMF for motion segmentation problem}
+Semi-Nonnegative Matrix Factorization(SNMF) based motion segmentation algorithm for object-level segmentation of videos.\\
+Given a video of $F$ frames and $P$ tracked point trajectories,the \textcolor{red}{velocity history matrix} $X$ is a $2(F-1)\times P$ matrix:
+\begin{equation}
+X=\left[
+          \begin{array}{cccc}
+            \triangle x_1^1 & \triangle x_2^1 & \cdots & \triangle x_P^1 \\
+            \triangle y_1^1 & \triangle y_2^1 & \cdots & \triangle y_P^1 \\
+            \vdots & \vdots & \ddots & \vdots \\
+            \triangle x_1^{F-1} & \triangle x_2^{F-1} & \cdots & \triangle x_P^{F-1} \\
+            \triangle y_1^{F-1} & \triangle y_2^{F-1} & \cdots & \triangle y_P^{F-1} \\
+          \end{array}
+        \right]
+\end{equation}
+where $\triangle x,\triangle y$ are the displacement vectors at coordinate $(x,y)$.The subscripts and superscripts denote the index of the point and the frame number respectively.\\
+Semi-nonnegative matrix factorization(SNMF) factors $X$ into $F$ and $G$ so as to minimize an error function $J(F,G)$:
+\begin{equation}
+J(F,G)=\min_{F,G}\Vert (X-FG^T)\Vert_F,G\geq 0
+\end{equation}
+where $X$ is the velocity history matrix,$F$ is a $2(F-1)\times r$ component matrix representing \textcolor{red}{trajectories},$G$ is an $P\times r$ coefficients matrix.\\
+\medskip
+SNMF models the observed trajectories in $X$ as a sum of components in $F$,with $G$ providing the relative weights.\\
+\medskip
+The obtained $r$-column coefficients $G$ serves as the \textcolor{red}{new compact $r$-dimensional trajectory representation}.
+
+\begin{block}{Is SNMF a promising framework for the motion segmentation?}
+The non-negative constraint on coefficients can extract the meaningful "parts" of ensemble data,restricting the linear combination on basis components to be \textcolor{red}{"additive"}.\\
+In the motion segmentation scenario,the \emph{\textcolor{green}{relative motion}} including \textcolor{cyan}{foreground object motion relative from the camera,the relative motion between different objects or between the sub-parts of specific objects} is the natural "parts".
+\end{block}
+
+\begin{block}{How to handle \emph{missing data}?}
+Define a $2(F-1)\times P$ indicator matrix $W$ that is 1/0 at the locations of valid/invalid data.We then seek to minimize:
+\begin{equation}
+J(F,G)=\min_{F,G}\Vert W\otimes(X-FG^T)\Vert_F,G\geq 0
+\end{equation}
+\end{block}
+
+\begin{algorithm}[H]
+\caption{SNMF with missing data}
+Initialize $F$ as a random matrix and $G$ as a random positive matrix\;
+\Repeat{Converge}
+{
+Updating $F$ by:\begin{equation}R=((W\otimes X)G)\oslash((W\otimes FG^T)G)\end{equation} \begin{equation}F=F\otimes R\end{equation}
+Updating $G$ by:\begin{equation}R_1=((W^T\otimes X^T)F)^+ +((W^T\otimes GF^T)F)^-\end{equation} \begin{equation}R_2=((W^T\otimes X^T)F)^- +((W^T\otimes GF^T)F)^+\end{equation} \begin{equation} G=G\otimes R_1\oslash R_2 \end{equation}
+}
+\end{algorithm}
+
+\begin{block}{Ambiguity Problem}
+For any given factorization $X=FG^T$,there exists inherit ambiguity.By normalizing column vectors in $F$ and multiplying back the normalization constant to $G$,the factorization ambiguity is avoided.
+\end{block}
+
+\begin{block}{Performance of SNMF}
+\begin{itemize}
+\item Produce state-of-the art results on segments of short videos
+\item Not satisfying when used on longer frame sequences because of frequent local minima.
+\end{itemize}
+\end{block}
+\end{frame}
+
+
+%===============================================================
+\subsection{Segmentation Propagation}
+\begin{frame}[allowframebreaks]\frametitle{Segmentation Propagation}
+\begin{block}{Main Idea}
+The majority of tracked points last longer than 10 frames,so when SNMF works well on short sequences of data,the segmentation information extracted should be able to be propagated across sliding windows by the majority of interest points tracked through multiple time windows.
+\end{block}
+\end{frame}
+
+\begin{algorithm}[H]
+\caption{Segmentation Propagation}
+Do short time SNMF segmentation in every sliding window.$N=n\times t$,N:total number of segmentation,n:number of segmentation per time window,t:number of time window\;
+Construct $N\times N$ affinity matrix by adding up total segmentation co-occurrence within every track\;
+Do Spectral Clustering to make $K$ segmentation groups\;
+Reassign each segmentation with its group labels\;
+Within every track of length $l$,vote for the most frequent label as track label\;
+\end{algorithm}
+
+\end{document}

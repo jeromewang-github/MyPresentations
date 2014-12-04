@@ -1,0 +1,93 @@
+
+------------------------------------------------------
+README file for the non-negative sparse coding package
+------------------------------------------------------
+
+Patrik Hoyer 
+February 7, 2002
+
+[May 22, 2002: Fixed a small bug in the original code, which caused the
+objective monitored to correspond to a different value of lambda than 
+what was actually being optimized.]
+
+This package implements the methods and performs the experiments of the papers
+'Non-negative sparse coding' and 'Modeling receptive fields with non-negative 
+sparse coding'. Both papers are available from my publication page:
+
+http://www.cis.hut.fi/phoyer/papers/
+
+The purpose of the package is to avoid using up space in the papers
+describing all the small details needed to reproduce the results, while
+at the same increasing the reproducibility of the experiments. I have
+tried to comment the code well enough that not only can the experiments
+be run but also understood and modified by the interested reader.
+
+You will need Matlab (we have used version 5.3, but it will probably
+also work with later and possibly with earlier versions). You will 
+also need quite a bit of free memory. The default settings require 
+on the order of 200Mb free memory. 
+
+----------------------------------------------------------------------------
+Learning the bars (as shown in 'Non-negative sparse coding')
+----------------------------------------------------------------------------
+
+Move into the 'code' directory, start up Matlab, and use the following
+command:
+
+>> barstest('nnsc',10,1,1);
+
+This show the original basis, generate data and show some samples,
+and start the learning using NNSC. 
+
+To compare with NMF, do:
+
+>> rdim = 6;
+>> barstest('nmf',rdim);
+
+The rdim determines the dimensionality of the representation. This must
+be less than the dimensionality of the data (9) for NMF to do something
+useful (at least in theory, because if the dimensionality is equal to that
+of the data there is always the trivial identity basis solution). 
+
+----------------------------------------------------------------------------
+Learning gabors from non-negative data
+(as shown in 'Modeling receptive fields with non-negative sparse coding')
+----------------------------------------------------------------------------
+
+To start the learning of the basis vectors, move into the 'code' 
+directory, start up Matlab, and use the following command:
+
+>> main('learn','nnsc');
+
+The algorithm runs until manually stopped. At any point during learning,
+you can look at the current state by opening up another Matlab session
+and giving the command:
+
+>> main('show','nnsc');
+
+This will display the current basis vectors (the matrix A), and 
+also shows how the objective function has decreased over time. It also
+plots the activation levels of the units, showing how much each
+unit contributes to representing the data.
+
+For comparison, you can also run non-negative matrix factorization
+(NMF) on the same input data:
+
+>> main('learn','nmf');
+
+Again, to look at how the learning progresses, use:
+
+>> main('show','nmf');
+
+-----------------------------------------------------------------------------
+Problems?
+-----------------------------------------------------------------------------
+
+In case of questions or problems, do not hesitate to contact me,
+preferrably by email at patrik.hoyer@hut.fi. However, I would
+appreciate it if you would take the time to examine the code a little
+and try to figure out the problem yourself. If you cannot figure it
+out, at least try to provide as much info as possible on the nature of
+the problem (including your exact commands and the error messages), so
+that I can have a chance to help you.
+

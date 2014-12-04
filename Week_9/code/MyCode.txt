@@ -1,0 +1,5 @@
+RGB = imread('alan.jpg');
+[X,map] = rgb2ind(RGB,256);
+imhist(X);
+colorbar;
+colormap(map)

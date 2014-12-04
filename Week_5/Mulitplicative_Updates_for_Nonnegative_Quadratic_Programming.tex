@@ -1,0 +1,537 @@
+\documentclass{beamer}
+\mode<presentation>
+\setbeamertemplate{navigation symbols}{}
+\usepackage{beamerthemeshadow}
+\usepackage[english]{babel}
+\usepackage{amsfonts}
+\usepackage{xkeyval}
+\usepackage{graphics}
+\usepackage{url}
+
+\begin{document}
+
+\title{Multiplicative Updates for Nonnegative Quadratic Programming}
+\subtitle{Fei Sha,Yuanqing Lin,Lawrence K.Saul Daniel D.Lee(2007)}
+\author{Feiyun Wang}
+\date{\today}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+
+\begin{frame}\frametitle{Table of contents}\tableofcontents
+\end{frame}
+
+
+\section{Definition of NQP}
+\begin{frame}\frametitle{Non-negative Quadratic Programming}
+\begin{equation}\label{eq1}
+\begin{split}
+&\min_v F(v)=\frac{1}{2}v^TAv+b^Tv\\
+& s.t. \;  v\geq 0
+\end{split}
+\end{equation}
+The constraint indicates that the variable $v$ is confined to the non-negative orthant. Assuming that the matrix $A$ is symmetric and positive definite(may have negative elements off the diagonal),so that the objective function $F(v)$ is convex having one global minimum and no local minima in particular.
+\end{frame}
+
+
+\section{Algorithm}
+\begin{frame}
+\begin{itemize}
+\item Presenting the multiplicative updates for the basic problem of NQP in eq.(\ref{eq1})
+\item Extending the multiplicative updates with upper-bound constraints $v\leq l$
+\end{itemize}
+\end{frame}
+
+
+\subsection{Updates for NQP}
+%unnumbered lists
+\begin{frame}\frametitle{Splitting Matrix $A$}
+Expressing the multiplicative updates for NQP in terms of the positive and negative components of the matrix $A$.
+\begin{itemize}
+\item Positive components of $A$
+\begin{equation}
+A_{ij}^+ = \left\{ \begin{array}{ll}
+A_{ij} & \textrm{if $A_{ij}>0$}\\
+0 & \textrm{otherwise}
+\end{array} \right.
+\end{equation}
+\item Negative components of $A$
+\begin{equation}
+A_{ij}^- = \left\{ \begin{array}{ll}
+\|A_{ij}\| & \textrm{if $A_{ij}<0$}\\
+0 & \textrm{otherwise}
+\end{array} \right.
+\end{equation}
+\end{itemize}
+It follows that $A=A^+-A^-$.
+\end{frame}
+
+
+\begin{frame}\frametitle{Decomposing the Objective Function}
+\begin{itemize}
+\item Combination of three terms.
+\begin{equation}\label{eq2}
+F(v)=F_a(v)+F_b(V)-F_c(v)
+\end{equation}
+\item The first and third terms split the quadratic pieces of $F(v)$ and the second term captures the linear piece:
+\begin{equation}\label{eq3}
+\begin{split}
+&F_a(v)=\frac{1}{2}v^TA^+v,\\
+&F_b(v)=b^Tv\,\\
+&F_c(v)=\frac{1}{2}v^TA^-v.
+\end{split}
+\end{equation}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}\frametitle{Corresponding Derivatives}
+\begin{itemize}
+\item Derivative of $F_a(v)$
+\begin{equation}\label{eq4}
+a_i=\frac{\partial F_a}{\partial v_i}=(A^+v)_i
+\end{equation}
+\item Derivative of $F_b(v)$
+\begin{equation}\label{eq5}
+b_i=\frac{\partial F_b}{\partial v_i}
+\end{equation}
+\item Derivative of $F_c(v)$
+\begin{equation}\label{eq6}
+c_i=\frac{\partial F_c}{\partial v_i}=(A^-v)_i
+\end{equation}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}\frametitle{Multiplicative Updates}
+Expressing the multiplicative updates in terms of partial derivatives
+\begin{equation}\label{eq7}
+v_i\longleftarrow [\frac{-b_i+\sqrt{b_i^2+4a_ic_i}}{2a_i}]
+\end{equation}
+Note that the partial derivatives $a_i$ and $b_i$ are guaranteed to be non-negative when evaluated the vectors $v$ in the non-negative orthant,so that the optimization remains confined to the feasible region for NQP.
+\end{frame}
+
+
+\subsection{Upper-Bound Constraints}
+\begin{frame}\frametitle{Upper-Bound Constraints}
+Extending the multiplicative updates in Eq.(\ref{eq7}) to incorporate upper-bound constraints of the form $v\leq l$.A sample way of enforcing such constraints is to clip the output of the updates in Eq.(\ref{eq8}):
+\begin{equation}\label{eq8}
+v_i\longleftarrow \min {\left\lbrace l_i,\left[\frac{-b_i+\sqrt{b_i^2+4a_ic_i}}{2a_i}\right]v_i\right\rbrace}
+\end{equation}
+\end{frame}
+
+
+\section{Convergence Analysis}
+\subsection{Analysis of Auxiliary Function}
+\begin{frame}\frametitle{Analysis of Auxiliary Function}
+The auxiliary function $G(v,v_t)$ for the objective function in Eq.(\ref{eq1}) has two critical properties:
+\begin{enumerate}
+\item $F(v)\leq G(v,v^t)$
+\item $F(v)=G(v,v)$
+\end{enumerate}
+We can derive the update rule $v^{t+1}=arg \min_v G(v,v^t)$,which never increases the objective function $F(v)$:
+\begin{equation}\label{eq9}
+F(v^{t+1})\leq G(v^{t+1},v^t)\leq G(v^t,v^t)\leq F(v^t)
+\end{equation}
+\end{frame}
+
+\subsection{Constructing Auxiliary Functions}
+\begin{frame}\frametitle{Constructing Auxiliary Functions}
+\begin{itemize}
+\item Auxiliary Function for $F_a(v)$
+\begin{equation}\label{eq10}
+G_a(v,v^t)=\frac{1}{2}\sum_i \frac{(A^+v^t)}{v_i^t}v_i^2
+\end{equation}
+\begin{equation}\label{eq12}
+F_a(v)\leq G_a(v,v^t)
+\end{equation}
+\item Auxiliary Function for $-F_c(v)$
+\begin{equation}\label{eq13}
+G_c(v,v^t)=-\frac{1}{2}\sum_{ij}A_{ij}^-v_iv_j(1+\log\frac{v_iv_j}{v_i^tv_j^t})
+\end{equation}
+\begin{equation}\label{eq14}
+-F_c(v)\leq G_c(v,v^t)
+\end{equation}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}\frametitle{Combination of two Auxiliary Function}
+Combining the auxiliary functions $G_a(v,v^t)$ and $G_c(v,v^t)$ to generate the final auxiliary function:
+\begin{equation}\label{eq15}
+\begin{split}
+G(v,v^t)&=G_a(v,v^t)+G_c(v,v^t)+F_b(v)\\
+&=\frac{1}{2}\sum_i \frac{(A^+v^t)_i}{v_i^t}v_i^2-\frac{1}{2}\sum_{ij}A_{ij}^-v_i^tv_j^t(1+\log\frac{v_iv_j}{v_i^t v_j^t})+\sum_i{b_iv_i}\\
+&=\frac{1}{2}\sum_i \frac{(A^+v^t)_i}{v_i^t}v_i^2-\sum_i(A^-v^t)_iv_i^t\log\frac{v_i}{v_i^t}\\
+&\;\;\;\;+\sum_i{b_iv_i}-\frac{1}{2}\sum{A_{ij}^-v_i^tv_j^t}
+\end{split}
+\end{equation}
+Then $G(v,v^t)$ is an auxiliary function for $F(v)$ satisfying $F(v) \leq G(v,v^t)$ and $F(v)=g(v,v)$.
+\end{frame}
+
+
+\begin{frame}\frametitle{Decomposing Auxiliary Function}
+\begin{enumerate}
+\item We identify the auxiliary function with
+\begin{equation}\label{eq16}
+G(v,v^t)=\sum_i{G_i(v_i)}-\frac{1}{2}v^TA^-v
+\end{equation}
+\begin{equation}\label{eq17}
+G_i(v_i)=\frac{1}{2}\frac{(A^+v)_i}{v_i^t}v_i^2-(A^-v)_iv_i\log\frac{v_i}{v_i^t}+b_iv_i
+\end{equation}
+where $G_i(v_i)$ is a single-variable function of $v_i$.\\
+\item Note that the minimizer of $G(v,v^t)$ can be easily found by minimizing each $G_i(v_i)$ separately:$v_i=arg \min_{v_i}G_i(v_i)$.\\
+\item Besides,$G_i(v_i)$ is strictly convex in $v_i$:
+\begin{equation}
+G_i^{''}(v_i)=\frac{(A^+v^t)_i}{v_i^t}+\frac{(A^-v^t)_i}{v_i^2}v_i^t\geq 0.
+\end{equation}
+\end{enumerate}
+\end{frame}
+
+
+\section{Applying these Theories to Our Work}
+\subsection{Reviewing LSDA}
+\begin{frame}\frametitle{Locality Sensitive Discriminant Analysis(LSDA)}
+We only consider the problem of mapping all the data points $X=(\textbf{x}_1,\textbf{x}_2,\cdots,\textbf{x}_m)^T$ to a line.Here,we get a set of points $\textbf{y}=(y_1,y_2,\cdots,y_m)^T$.
+\begin{itemize}
+\item Objective function of within-class graph:
+\begin{equation}\label{eq18}
+\min\sum_{ij}(y_i-y_j)^2W_{w,ij}
+\end{equation}
+\item Objective function of between-class graph:
+\begin{equation}\label{eq19}
+\max\sum_{ij}(y_i-y_j)^2W_{b,ij}
+\end{equation}
+\end{itemize}
+\end{frame}
+
+
+\subsection{Modification on LSDA}
+\begin{frame}\frametitle{What do we want to do?}
+Adding sparseness and non-negativity to LSDA and applying them in hashing.
+\begin{itemize}
+\item Objective function of sparseness:
+\begin{equation}\label{eq20}
+\min\begin{Vmatrix}\textbf{y}\end{Vmatrix}_1
+\end{equation}
+\item Constraint C1: \(y^TD_by=1\)
+\item Constraint C2: \(\forall i,y_i\geq$0$\)
+\end{itemize}
+\end{frame}
+
+
+\subsection{Analysing the Objective Functions}
+\begin{frame}\frametitle{Rewriting the First Objective Function}
+By simple algebra formulation,the objective function (\ref{eq18}) can be reduced to
+\begin{equation}\label{eq21}
+\begin{split}
+&\frac{1}{2}\sum_{ij}(y_i-y_j)^2W_{w,ij}\\
+&=\frac{1}{2}\sum_{ij}(y_i^2+y_j^2-2y_i y_j)W_{w,ij}\\
+&=\sum_i y_i^2W_{w,ij}-\sum_{ij}y_i y_j W_{w,ij}\\
+&=y^T D_w y-y^T W_w y\\
+&=y^T L_w y
+\end{split}
+\end{equation}
+\end{frame}
+
+
+\begin{frame}\frametitle{Reorganizing the Expression of the Second Objective Function}
+Similarly,the objective function (\ref{eq19}) can be reduced to
+\begin{equation}\label{eq22}
+\begin{split}
+&\frac{1}{2}\sum_{ij}(y_i-y_j)^2W_{b,ij}\\
+&=\frac{1}{2}\sum_{ij}(y_i^2+y_j^2-2y_i y_j)W_{b,ij}\\
+&=\sum_i y_i^2W_{b,ij}-\sum_{ij}y_i y_j W_{b,ij}\\
+&=y^T D_b y-y^T W_b y\\
+\end{split}
+\end{equation}
+\end{frame}
+
+
+\begin{frame}\frametitle{Simplifying the Objective Functions above}
+\begin{itemize}
+\item The objective function (\ref{eq18}) is equivalent to:
+\begin{equation}\label{eq23}
+\min_y y^T L_w y
+\end{equation}
+\item Under the constraint C1,the objective function (\ref{eq19}) becomes the following:
+\begin{equation}\label{eq24}
+\min_y y^T W_b y
+\end{equation}
+\item And the objective function (\ref{eq20}) can be rewritten as follows under the constrain C2:
+\begin{equation}\label{eq25}
+\min_y by.
+\end{equation}
+where $b$ is a row vector with all ones.
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}\frametitle{Final Objective Function}
+Combining the objective functions (\ref{eq23}),(\ref{eq24}),(\ref{eq25}) and the constraints together,we get the final objective function:
+\begin{equation}\label{eq26}
+\begin{split}
+\min_y F(y)&=\frac{1}{2}y^T(\alpha L_w+(1-\alpha)W_b)y+\frac{\eta}{2}(1-y^TD_by)+\lambda by\\
+&=\frac{1}{2}y^T(\alpha L_w+(1-\alpha)W_b-\eta D_b)y+\frac{\eta}{2}+\lambda by
+\end{split}
+\end{equation}
+\begin{tabular}{c c}
+Constraint 1:&$y\geq 0$\\
+Constraint 2:&$0\leq\alpha\leq 1$\\
+Constraint 3:&$\eta \geq 0$\\
+Constraint 4:&$\lambda \geq 0$
+\end{tabular}
+\end{frame}
+
+
+\subsection{Formatting our Objective Functions by the Tricks in NQP}
+\begin{frame}\frametitle{Extracting and Splitting the Quadratic Parameter of $F(y)$}
+\begin{itemize}
+\item Quadratic Parameter of $F(y)$:
+\begin{equation}\label{eq27}
+A=\alpha L_w+(1-\alpha)W_b-\eta D_b
+\end{equation}
+\item Positive Components of $A$:
+\begin{equation}\label{eq28}
+A^+=\alpha D_w+(1-\alpha)W_b
+\end{equation}
+\item Negative Components of $A$:
+\begin{equation}\label{eq29}
+A^-=\alpha W_w+\eta D_b
+\end{equation}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}\frametitle{Decomposing the Objective Function $F(y)$}
+\begin{itemize}
+\item Positive Quadratic Piece of $F(y)$:
+\begin{equation}\label{eq30}
+F_a(y)=\frac{1}{2}y^TA^+y
+\end{equation}
+\item Linear Piece of $F(y)$:
+\begin{equation}\label{eq31}
+F_b(y)=\lambda by+\frac{\eta}{2}
+\end{equation}
+\item Negative Quadratic Piece of $F(y)$:
+\begin{equation}\label{eq32}
+F_c(y)=\frac{1}{2}y^TA^-y
+\end{equation}
+\end{itemize}
+\end{frame}
+
+
+\subsection{Constructing Auxiliary Functions by the Tricks in NQP}
+\begin{frame}\frametitle{Constructing Auxiliary Functions}
+\begin{itemize}
+\item Auxiliary Function for $F_a(y)$:
+\begin{equation}\label{eq33}
+G_a(y,y^t)=\frac{1}{2}\sum_i\frac{(A^+y^t)_i}{y_i^t}y_i^2
+\end{equation}
+\begin{equation}\label{eq34}
+F_a(y)\leq G_a(y,y^t)
+\end{equation}
+\item Auxiliary Function for $-F_c(y)$:
+\begin{equation}\label{eq35}
+G_c(y)=-\frac{1}{2}\sum_{ij}A_{ij}^-y_i^ty_j^t(1+\log\frac{y_iy_j}{y_i^ty_j^t})
+\end{equation}
+\begin{equation}\label{eq36}
+-F_c(y)\leq G_c(y)
+\end{equation}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\begin{itemize}
+\item Generating Global Auxiliary Function $G(y,y^t)$ for $F(y)$:
+\begin{equation}\label{eq37}
+\begin{split}
+G(y,y^t)&=G_a(y,y^t)+G_c(y,y^t)+F_b(y)\\
+&=\frac{1}{2}\sum_i{\frac{(A^+y^t)_i}{y_i^t}}y_i^2-\frac{1}{2}\sum_{ij}{A_{ij}^-y_i^ty_j^t(1+\log\frac{y_iy_j}{y_i^ty_j^t})}\\
+&\;\;\;\;+\lambda\sum_i y_i+\frac{\eta}{2}\\
+&=\frac{1}{2}\sum_i{\frac{(A^+y^t)_i}{y_i^t}}y_i^2-\sum_i(A^-y^t)_iy_i^t\log\frac{y_i}{y_i^t}-\frac{1}{2}\sum_{ij}A_{ij}^-y_i^ty_j^t\\
+&\;\;\;\;+\lambda\sum_i y_i+\frac{\eta}{2}
+\end{split}
+\end{equation}
+\item Having the following properties:
+\begin{equation}\label{eq38}
+F(y^{t+1})\leq G(y^{t+1},y^t)\leq G(y^t,y^t)=F(y^t)
+\end{equation}
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Splitting Auxiliary Function}
+\begin{itemize}
+\item The Auxiliary Function can be reduced to:
+\begin{equation}\label{eq39}
+G(y,y^t)=\sum_i G_i(y_i)-\frac{1}{2}\sum_{ij}A_{ij}^-y_i^ty_j^t+\frac{\eta}{2}
+\end{equation}
+\item Picking Up the Single-Variable of $y_i$ from $G(y,y^t)$
+\begin{equation}\label{eq40}
+G_i(y_i)=\frac{1}{2}\frac{(A^+y^t)_i}{y_i^t}y_i^2-(A^-y^t)_iy_i^t\log\frac{y_i}{y_i^t}+\lambda y_i
+\end{equation}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}\frametitle{First and Second Derivative of $G_i(y_i)$}
+\begin{itemize}
+\item The First Derivative of $G_i(y_i)$:
+\begin{equation}\label{eq41}
+G_i^{'}(y_i)=\frac{(A^+y^t)_i}{y_i^t}y_i-\frac{(A^-y^t)_i}{y_i^t}y_i+\lambda
+\end{equation}
+\item The Second Derivative of $G_i(y_i)$:
+\begin{equation}\label{eq42}
+G_i^{''}(y_i)=\frac{(A^+y^t)_i}{y_i^t}+\frac{(A^-y^t)_i}{y_i^2}y_i^t\geq 0
+\end{equation}
+So that $G_i(y_i)$ is convex in $y_i$.
+\end{itemize}
+\end{frame}
+
+
+\subsection{Deriving Update Rule}
+\begin{frame}\frametitle{Deriving Update Rule}
+\begin{itemize}
+\item Minimizing each $G_i(y_i)$ separately so as to find the minimizer of $G(y,y^t)$.Simply setting the first derivative of $G_i(y_i)$ to zero:
+\begin{equation}\label{eq43}
+G_i^{'}(y_i)=0\Longrightarrow(A^+y^t)_iy_i^2+\lambda y_i^ty_i-(A^-y^t)_i{y_i^t}^2=0
+\end{equation}
+\item Solving the quadratic formula Eq.(\ref{eq43}) to get the update rule:
+\begin{equation}\label{eq44}
+y_i=\frac{-\lambda y_i^t+\sqrt{(\lambda y_i^t)^2+4(A^+y^t)_i(A^-y^t)_i}}{2(A^+y^t)_i}
+\end{equation}
+\end{itemize}
+\end{frame}
+
+
+%\subsection{Upper-Bound Constraints}
+%\begin{frame}\frametitle{numbered lists}
+%\begin{enumerate}
+%\item Introduction to  \LaTeX
+%\item Course 2
+%\item Termpapers and presentations with \LaTeX
+%\item Beamer class
+%\end{enumerate}
+%\end{frame}
+
+
+%\begin{frame}\frametitle{numbered lists with pause}
+%\begin{enumerate}
+%\item Introduction to  \LaTeX \pause
+%\item Course 2 \pause
+%\item Termpapers and presentations with \LaTeX \pause
+%\item Beamer class
+%\end{enumerate}
+%\end{frame}
+
+
+%\section{Convergence Analysis}
+%\subsection{Auxiliary Function}
+%\begin{frame}\frametitle{Tables}
+%\begin{tabular}{|c|c|c|}
+%\hline
+%\textbf{Date} & \textbf{Instructor} & \textbf{Title} \\
+%\hline
+%WS 04/05 & Sascha Frank & First steps with  \LaTeX  \\
+%\hline
+%SS 05 & Sascha Frank & \LaTeX \ Course serial \\
+%\hline
+%\end{tabular}
+%\end{frame}
+
+
+%\begin{frame}\frametitle{Tables with pause}
+%\begin{tabular}{c c c}
+%A & B & C \\
+%\pause
+%1 & 2 & 3 \\
+%\pause
+%A & B & C \\
+%\end{tabular}
+%\end{frame}
+
+
+%\section{Section no.4}
+%\subsection{blocs}
+%\begin{frame}\frametitle{blocs}
+%\begin{block}{title of the bloc}
+%bloc text
+%\end{block}
+%\begin{exampleblock}{title of the bloc}
+%bloc text
+%\end{exampleblock}
+%\begin{alertblock}{title of the bloc}
+%bloc text
+%\end{alertblock}
+%\end{frame}
+
+%\section{Section no.5}
+%\subsection{split screen}
+%
+%\begin{frame}\frametitle{splitting screen}
+%\begin{columns}
+%\begin{column}{5cm}
+%\begin{itemize}
+%\item Beamer
+%\item Beamer Class
+%\item Beamer Class Latex
+%\end{itemize}
+%\end{column}
+%\begin{column}{5cm}
+%\begin{tabular}{|c|c|}
+%\hline
+%\textbf{Instructor} & \textbf{Title} \\
+%\hline
+%Sascha Frank &  \LaTeX \ Course 1 \\
+%\hline
+%Sascha Frank &  Course serial  \\
+%\hline
+%\end{tabular}
+%\end{column}
+%\end{columns}
+%\end{frame}
+%
+%\subsection{Pictures}
+%\begin{frame}\frametitle{pictures in latex beamer class}
+%\begin{figure}[hbtp]
+%\includegraphics[scale=0.1]{PIC1.jpg}
+%\caption{show an example picture}
+%\end{figure}
+%\end{frame}
+
+%\subsection{joining picture and lists}
+%
+%\begin{frame}
+%\frametitle{pictures and lists in beamer class}
+%\begin{columns}
+%\begin{column}{5cm}
+%\begin{itemize}
+%\item<1-> subject 1
+%\item<3-> subject 2
+%\item<5-> subject 3
+%\end{itemize}
+%\vspace{3cm}
+%\end{column}
+%\begin{column}{5cm}
+%\begin{overprint}
+%\includegraphics<2>[scale=0.1]{PIC1.jpg}
+%\includegraphics<4>[scale=0.1]{PIC2.jpg}
+%\includegraphics<6>[scale=0.1]{PIC3.jpg}
+%\end{overprint}
+%\end{column}
+%\end{columns}
+%\end{frame}
+%
+%
+%\subsection{pictures which need more space}
+%\begin{frame}[plain]
+%\frametitle{plain, or a way to get more space}
+%\begin{figure}
+%\includegraphics[scale=0.1]{PIC1.jpg}
+%\caption{show an example picture}
+%\end{figure}
+%\end{frame}
+
+\end{document}

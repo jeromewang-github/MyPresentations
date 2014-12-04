@@ -1,0 +1,183 @@
+\documentclass{beamer}
+
+%\mode<presentation>
+%{
+  %\usetheme{}
+  %\usecolortheme{beaver}
+  % 可供选择的主题参见 beameruserguide.pdf, 第 134 页起
+  % 无导航条的主题: Bergen, Boadilla, Madrid, Pittsburgh, Rochester;
+  % 有树形导航条的主题: Antibes, JuanLesPins, Montpellier;
+  % 有目录竖条的主题: Berkeley, PaloAlto, Goettingen, Marburg, Hannover;
+  % 有圆点导航条的主题: Berlin, Dresden, Darmstadt, Frankfurt, Singapore, Szeged;
+  % 有节与小节导航条的主题: Copenhagen, Luebeck, Malmos, Warsaw
+  %\setbeamercovered{transparent}
+  % 如果取消上一行的注解 %, 就会使得被覆盖部分变得透明(依稀可见)
+%} 
+\definecolor{kured}{RGB}{240,45,104}
+\definecolor{kuredlys}{RGB}{219,49,100}
+\definecolor{kuredlyslys}{RGB}{249,90,138}
+\definecolor{kuredlyslyslys}{RGB}{230,118,152}
+\setbeamercovered{transparent}
+\mode<presentation>
+{  
+  \usetheme{Berkeley}
+  \usecolortheme[named=kured]{structure}
+  \useinnertheme{circles}
+  \usefonttheme[onlymath]{serif}
+  \setbeamercovered{transparent}
+  \setbeamertemplate{blocks}[rounded][shadow=true]
+}
+
+\usepackage[english]{babel}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{xkeyval}
+\usepackage{graphics}
+\usepackage{url}
+\usepackage{cases}
+\usepackage[lined,boxed,linesnumbered]{algorithm2e}
+
+\logo{\includegraphics[scale=0.08]{images/HUSTLogo}}
+\title{Effective Sparse Coding Algorithms-NISP06}
+\author{Yunfei Wang}
+\institute{Department of Computer Science \& Technology \\Huazhong University of Science \& Technology}
+\date{\today}
+
+
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}
+\tableofcontents
+\end{frame}
+
+\begin{frame}
+Fast algorithms for solving two general-purpose convex problems:
+\begin{enumerate}
+\item L1-regularized Least Squares problem solver using the feature-sign search algorithm.
+\item L2-constrained Least Squares problem solver using Lagrange dual.
+\end{enumerate}
+\end{frame}
+
+
+\section{Preliminaries}
+\begin{frame}\frametitle{Optimization Problem}
+\textcolor{red}{Sparse coding} represent input vectors approximately as a \textcolor{cyan}{weighted linear combination} of a small number of "basis vectors", which can be applied to \textcolor{purple}{learning overcomplete basis sets}, in which the number of bases is greater than the input dimension.
+\begin{equation}\label{eq:obj}
+\min_{S,B}\textcolor{red}{\underbrace{\|X-BS\|_F^2}_{\text{data fitting}}}+\textcolor{green}{\underbrace{\beta\phi(S)}_{Sparsity}}
+\end{equation}
+\[\text{subject to }b_i^2\leq c,\forall i=1,\cdots,n.\]
+where $X\in \mathbb{R}^{k\times m}$ is input matrix(each column is an input vector),$B\in \mathbb{R}^{k\times n}$ is the basis matrix(each column is a basis vector) and $S\in \mathbb{R}^{n\times m}$ is the coefficient matrix(each column is a coefficient vector).
+\end{frame}
+
+\begin{frame}\frametitle{Sparsity Function}
+Usual sparsity-inducing regularizers:
+\begin{equation}\label{eq:sparsityfun}
+\phi(s_j)=
+\begin{cases}
+\|s_j\|_0 &\text{($L_0$ penalty function)}\\
+\|s_j\|_1 &\text{($L_1$ penalty function)}\\
+(s_j^2+\epsilon)^{\frac{1}{2}} &\text{($epsilonL_1$ penalty function)}\\
+\log(1+s_j^2) &\text{(log penalty function)}
+\end{cases}
+\end{equation}
+$L_1$ regularization is known to produce sparse coefficients and robust to irrelevant features.\\
+Log regularization make gradient-based methods get stuck in local optima.
+\end{frame}
+
+\begin{frame}\frametitle{Strategy in this Paper}
+The optimization problem is convex in $B$(while keeping $S$ fixed) and convex is $S$(while keeping $B$ fixed),but not convex in both simultaneously.\\
+Iteratively optimize the objective by alternatingly optimizing with respect to $B$(bases) and $S$(coefficients) while holding the other fixed:\\
+\begin{itemize}
+\item For learning bases $B$, the optimization problem is a least squares problem with quadratic constrains. \emph{\textcolor{red}{Lagrange dual}} will be used to solve the problem.
+\item For learning coefficients $S$, the optimization problem equals a $L_1$-regularized least squares problem.\emph{\textcolor{red}{Feature-sign search algorithm}} will be used to tackle the problem.
+\end{itemize}
+\end{frame}
+
+\section{Learning the coefficients S}
+\begin{frame}\frametitle{Learning the coefficients S}
+The problem can be solved by optimizing over each $s_i$ individually:
+\begin{equation}\label{eq:learnsparse}
+\min_s \|x-Bs\|^2+\beta\|x\|_1
+\end{equation}
+Main Idea:If we know the signs at the optimal value,Eq.(\ref{eq:learnsparse}) can be reduced to a standard and unconstrained quadratic problem.\\
+\medskip 
+The algorithm firstly guess the signs of coefficients $s$, then solves the resulting unconstrained QP and finally refines the initially incorrect guess.
+\end{frame}
+
+
+%\begin{frame}[allowframebreaks]\frametitle{Algorithm}
+%\begin{algorithm}[H]
+%\SetKwInput{KwInit}{Initialize}
+%\KwInit{$s=\vec{0},\theta=\vec{0}(\theta_i \in \{-1,0,1\}),activeset=\{\}$;}
+%Form zero coefficients of $s$,select $i=arg_i \max\left\Vert \frac{\partial \|x-Bs\|^2}{\partial s_i}\right\Vert$
+%{\;Active $s_i$ only if it locally improves the objective,namely:
+%\begin{list}{}{}
+%\item $\left\Vert \frac{\partial \|x-Bs\|^2}{\partial s_i}\right\Vert >\beta$,then set $\theta_i=-1,activeset=\{i\}\cup activeset$.
+%\item 2
+%\end{list}}
+%
+%\emph{Initialize $D_t \in \mathbb R^{(n+d) \times (n+d)}$ as an identity matrix}\;
+%\Repeat(\tcp*[h]{Iteratively compute U}){Convergence}
+%{
+%	Calculate $U_{t+1}=D_t^{-1}B^T(BD_t^{-1}B^T)^{-1}Y$\;
+%	Calculate the diagonal matrix $D_{t+1}$,where the i-th diagonal element is $\frac{1}{2\|u_{t+1}^t\|_2}$\;
+%	$t=t+1$\;
+%}
+%\For{$j= 1$ \KwTo $N$}
+%{
+%	Get $r_s(y_j)=\|y-A^T\delta_s(x_j)\|_2,s=1,2,\cdots ,C$\;
+%	$ID(y_i)=\mathop{\min}\limits_{s=1,2,\cdots ,C}r_s(y_j)$\;
+%}
+%\Return $ID(Y)=((ID(y_1),ID(y_2),\cdots ,ID(y_n))$\;	
+%\caption{Feature-sign search algorithm}
+%\end{algorithm}
+%\end{frame}
+
+\section{Learning the bases B}
+\begin{frame}\frametitle{Learning the bases B}
+Given fixed coefficients $S$,the optimization problem over bases $B$ reduces Eq.(\ref{eq:obj}) to the following least squares problem with quadratic constraints,which is independent of the sparsity function:
+\begin{equation}\label{eq:learnbases}
+\min_{S,B}\|X-BS\|_F^2
+\end{equation}
+\[\text{subject to }b_i^2\leq c,\forall i=1,\cdots,n.\]
+where $b_i$ is a basis vector in $B$.\\
+Lagrange dual can be more efficient than gradient descent with iterative projection when applied to the above optimization problem.
+\end{frame}
+
+\begin{frame}[allowframebreaks]\frametitle{Lagrange dual}
+First,consider the Lagrangian:
+\begin{equation}\label{eq:lagrange}
+\mathcal{L}(B,\lambda)=Tr((X-BS)^T(X-BS))+\sum_{j=1}^n\lambda_j(\sum_{i=1}^k B_{i,j}^2-c)
+\end{equation}
+where each $\lambda_j\geq 0$ is a dual variable.\\
+Minimizing over $B$ analytically,we obtain the Lagrange dual:
+\begin{equation}\label{eq:lagDual}
+\mathcal{D}(\lambda)=\min_B \mathcal{L}(B,\lambda)=Tr(X^TX-XS^T(SS^T+\Lambda)^{-1}(XS^T)^T-c\Lambda)
+\end{equation}
+where $\Lambda=diag(\lambda)$.
+\newpage
+The gradient and Hessian of $\mathcal{D}(\lambda)$ are as follows:
+\begin{equation}\label{eq:lagGradient}
+\frac{\partial \mathcal{D}(\lambda)}{\partial \lambda_i}=\|XS^T(SS^T+\Lambda)^{-1}e_i\|^2
+\end{equation}
+\begin{equation}\label{eq:lagHessian}
+\begin{split}
+\frac{\partial^2 \mathcal{D}(\lambda)}{\partial \lambda_i \partial \lambda_j}=&-2((SS^T+\Lambda)^{-1}(XS^T)^TXS^T(SS^T+\Lambda)^{-1})_{ij}\\
+&\times((SS^T+\Lambda)^{-1})_{ij}
+\end{split}
+\end{equation}
+where $e_i\in \mathcal{R}^n$ is the i-th unit vector.\\
+\medskip
+Optimizing Eq.(\ref{eq:lagDual}) using Newton's method or conjugate gradient,we obtain the optimal bases $B$ as follows:
+\begin{equation}\label{eq:bases}
+B^T=(SS^T+\Lambda)^{-1}(XS^T)^T
+\end{equation}
+\end{frame}
+
+\end{document}
